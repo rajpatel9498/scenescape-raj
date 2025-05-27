@@ -1,10 +1,28 @@
 name: Workspace Setup
 on:
+  # Allow manually triggering the workflow
+  workflow_dispatch: {}
+  # Run on all commits that are pushed to all branches
+  push:
+    branches:
+      - 'main'
+      - 'release-*'
+
+  # Trigger workflow on PRs to all branches
   pull_request:
     branches:
-      - main
-      - release-*
-  workflow_dispatch:
+      - "*"
+    types:
+      - opened
+      - synchronize
+      - reopened
+  # Trigger workflow when enqueued to a merge group
+  merge_group:
+
+# Only run at most 1 workflow concurrently per PR, unlimited for branches
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
