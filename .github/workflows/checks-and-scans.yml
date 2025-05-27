@@ -56,3 +56,4 @@ jobs:
 
       - name: REUSE Compliance Check
         uses: fsfe/reuse-action@v5.0.0
+        with: {}
