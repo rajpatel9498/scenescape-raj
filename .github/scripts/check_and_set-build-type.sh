@@ -21,7 +21,7 @@ case "$GITHUB_EVENT_NAME" in
     ;;
   workflow_dispatch)
     # Manual trigger via UI
-    if [[ "$GITHUB_WORKFLOW" == *"DRYRUN"* ]]; then
+    if [[ "$GITHUB_WORKFLOW" == *"Workspace Setup"* ]]; then
       BUILD_TYPE="MANUAL"
     elif [[ "$GITHUB_WORKFLOW" == *"RELEASE"* ]]; then
       BUILD_TYPE="TAG"
