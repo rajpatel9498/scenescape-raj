@@ -4,22 +4,28 @@
 
 name: Workspace Setup
 on:
-  # Allow manually triggering the workflow
-  workflow_dispatch: {}
-  # Run on all commits that are pushed to all branches
+  pull_request:
+  workflow_dispatch:
   push:
     branches:
-      - 'main'
-      - 'release-*'
+      - actions_fix
+# on:
+#   # Allow manually triggering the workflow
+#   workflow_dispatch: {}
+#   # Run on all commits that are pushed to all branches
+#   push:
+#     branches:
+#       - 'main'
+#       - 'release-*'
 
-  # Trigger workflow on PRs to all branches
-  pull_request:
-    branches:
-      - "*"
-    types:
-      - opened
-      - synchronize
-      - reopened
+#   # Trigger workflow on PRs to all branches
+#   pull_request:
+#     branches:
+#       - "*"
+#     types:
+#       - opened
+#       - synchronize
+#       - reopened
   # Trigger workflow when enqueued to a merge group
   merge_group:
 
