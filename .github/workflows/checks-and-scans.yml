@@ -35,34 +35,12 @@ jobs:
     name: Scan for viruses
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    env:
-      OUTPUT_FILE: antivirus-report.txt
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          persist-credentials: false
+      - name: ClamAV Scan
+        uses: open-edge-platform/orch-ci/.github/actions/security/clamav/action.yml@00e1efc555dd426a9fffe8a88dffda663bda5eb8
 
-      - name: ClamAV
-        run: |
-          docker run --rm \
-            --mount type=bind,source=./,target=/scandir \
-            clamav/clamav:stable \
-            clamscan --recursive --log=/scandir/${{ env.OUTPUT_FILE }} \
-            /scandir
-
-          if [ $? -ne 0 ]; then
-              sudo chown $USER:$USER ${{ env.OUTPUT_FILE }}
-              exit 1
-          fi
-          sudo chown $USER:$USER ${{ env.OUTPUT_FILE }}
-
-      - name: Upload evidence
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
-        with:
-          name: antivirus-report
-          path: ${{ env.OUTPUT_FILE }}
+      - name: Trivy Scan
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy/action.yml@00e1efc555dd426a9fffe8a88dffda663bda5eb8
 
   check-license:
     permissions:
