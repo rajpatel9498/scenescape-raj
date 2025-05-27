@@ -1,0 +1,80 @@
+---
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+name: Workspace Setup
+on:
+  # Allow manually triggering the workflow
+  workflow_dispatch: {}
+  # Run on all commits that are pushed to all branches
+  push:
+    branches:
+      - 'main'
+      - 'release-*'
+
+  # Trigger workflow on PRs to all branches
+  pull_request:
+    branches:
+      - "*"
+    types:
+      - opened
+      - synchronize
+      - reopened
+  # Trigger workflow when enqueued to a merge group
+  merge_group:
+
+# Only run at most 1 workflow concurrently per PR, unlimited for branches
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  scan-viruses:
+    permissions:
+      contents: read
+    name: Scan for viruses
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      OUTPUT_FILE: antivirus-report.txt
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: ClamAV
+        run: |
+          docker run --rm \
+            --mount type=bind,source=./,target=/scandir \
+            clamav/clamav:stable \
+            clamscan --recursive --log=/scandir/${{ env.OUTPUT_FILE }} \
+            /scandir
+
+          if [ $? -ne 0 ]; then
+              sudo chown $USER:$USER ${{ env.OUTPUT_FILE }}
+              exit 1
+          fi
+          sudo chown $USER:$USER ${{ env.OUTPUT_FILE }}
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+        with:
+          name: antivirus-report
+          path: ${{ env.OUTPUT_FILE }}
+
+  check-license:
+    permissions:
+      contents: read
+    name: Check License
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: REUSE Compliance Check
+        uses: fsfe/reuse-action@bb774aa972c2a89ff34781233d275075cbddf542  # v5.0.0
