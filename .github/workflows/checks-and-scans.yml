@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-name: Workspace Setup
+name: License Check and Scan for Viruses
 on:
   # Allow manually triggering the workflow
   workflow_dispatch: {}
