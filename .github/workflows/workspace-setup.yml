@@ -1,0 +1,24 @@
+name: Workspace Setup
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup environment
+        shell: bash
+        run: |
+          chmod +x .github/scripts/check_and_set-build-type.sh
+          .github/scripts/check_and_set-build-type.sh
+
+      - name: Checkout AutoLM scripts
+        shell: bash
+        run: |
+          chmod +x .github/scripts/checkout-autolm-scripts.sh
+          .github/scripts/checkout-autolm-scripts.sh
