@@ -55,9 +55,6 @@ fi
 # Set BUILD_TYPE for other steps
 echo "BUILD_TYPE=$BUILD_TYPE" >> "$GITHUB_ENV"
 echo "☛☛☛ Current build type: $BUILD_TYPE ☚☚☚"
-echo "☛☛☛ Current build type: $GITHUB_EVENT_NAME ☚☚☚"
-echo "☛☛☛ Current build type: $GITHUB_WORKFLOW ☚☚☚"
-echo "☛☛☛ Current build type: $GITHUB_REF ☚☚☚"
 
 # Extract JIRA release version from file
 JIRA_RELEASE=$(grep -oP "^\d+\.\d+" sscape/version.txt || echo "unknown")
