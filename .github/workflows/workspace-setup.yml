@@ -30,7 +30,7 @@ concurrency:
 
 permissions:
   contents: read
-  
+
 jobs:
   setup:
     runs-on: ubuntu-latest
@@ -43,7 +43,7 @@ jobs:
         run: |
           .github/scripts/check_and_set-build-type.sh
 
-      - name: Checkout AutoLM scripts
-        shell: bash
-        run: |
-          .github/scripts/checkout-autolm-scripts.sh
+      # - name: Checkout AutoLM scripts
+      #   shell: bash
+      #   run: |
+      #     .github/scripts/checkout-autolm-scripts.sh
