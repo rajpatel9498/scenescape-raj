@@ -2,16 +2,45 @@
 # SPDX-FileCopyrightText: (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-name: Pre-Merge CI Pipeline
+name: Migration CI Test
 
-on:  # yamllint disable-line rule:truthy
-  push:
-      branches:
-        - ci/migration
+on:
+  # Allow manually triggering the workflow
   workflow_dispatch:
+    inputs:
+      run_type:
+        description: 'Specify the type of run'
+        required: true
+        default: 'manual'
+  # Run on all commits that are pushed to all branches
+  push:
+    branches:
+      - 'main'
+      - 'release-*'
+
+  # Trigger workflow on PRs to all branches
+  pull_request:
+    branches:
+      - "*"
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+  schedule:
+    - cron: '0 5 * * 1-6'
+    - cron: '0 12 * * 6'
+
+  # Trigger workflow when enqueued to a merge group
+  merge_group:
+
+# Only run at most 1 workflow concurrently per PR, unlimited for branches
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
-  contents: read          # needed for actions/checkout
+  contents: read       # needed for actions/checkout
 
 jobs:
   pre-checks:
@@ -42,16 +71,16 @@ jobs:
 
           echo "filtered_projects=$filtered_projects" >> $GITHUB_OUTPUT
           echo "other_changed_projects=$other_changed_projects" >> $GITHUB_OUTPUT
-      - name: "Workspace Setup"
-        uses: ./.github/actions/workspace-setup
-      - name: Debug environment
-        run: |
-          echo "✅ BUILD_TYPE: $BUILD_TYPE"
-          echo "✅ JIRA_RELEASE: $JIRA_RELEASE"
-          echo "✅ VERSION: $VERSION"
-          echo "✅ ARTIFACTORY_PATH: $ARTIFACTORY_PATH"
-          echo "✅ SW_PACKAGE_DIR: $SW_PACKAGE_DIR"
-          echo "✅ TEST_TEMPLATE: $TEST_TEMPLATE"
+      # - name: "Workspace Setup"
+      #   uses: ./.github/actions/workspace-setup
+      # - name: Debug environment
+      #   run: |
+      #     echo "✅ BUILD_TYPE: $BUILD_TYPE"
+      #     echo "✅ JIRA_RELEASE: $JIRA_RELEASE"
+      #     echo "✅ VERSION: $VERSION"
+      #     echo "✅ ARTIFACTORY_PATH: $ARTIFACTORY_PATH"
+      #     echo "✅ SW_PACKAGE_DIR: $SW_PACKAGE_DIR"
+      #     echo "✅ TEST_TEMPLATE: $TEST_TEMPLATE"
   # validate important repository-level changes, without triggering builds/tests for unrelated app code
   pre-merge-root:
     permissions:
@@ -94,67 +123,67 @@ jobs:
     with:
       run_version_check: true
       run_build: true
-  filter:
-   runs-on: ubuntu-latest
-   outputs:
-     toplevel_changed: ${{ steps.filter.outputs.toplevel }}
-     autocalibration_changed: ${{ steps.filter.outputs.autocalibration }}
-     controller_changed: ${{ steps.filter.outputs.controller }}
-     percebro_changed: ${{ steps.filter.outputs.percebro }}
-   steps:
-     - uses: actions/checkout@v4
-     - name: Set paths filter
-       id: filter
-       uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50
-       with:
-         filters: |
-           toplevel:
-             - 'docs/**'
-           autocalibration:
-             - 'autocalibration/docs/**'
-           controller:
-             - 'controller/docs/**'
-           percebro:
-             - 'percebro/docs/**'
+  # filter:
+  #  runs-on: ubuntu-latest
+  #  outputs:
+  #    toplevel_changed: ${{ steps.filter.outputs.toplevel }}
+  #    autocalibration_changed: ${{ steps.filter.outputs.autocalibration }}
+  #    controller_changed: ${{ steps.filter.outputs.controller }}
+  #    percebro_changed: ${{ steps.filter.outputs.percebro }}
+  #  steps:
+  #    - uses: actions/checkout@v4
+  #    - name: Set paths filter
+  #      id: filter
+  #      uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50
+  #      with:
+  #        filters: |
+  #          toplevel:
+  #            - 'docs/**'
+  #          autocalibration:
+  #            - 'autocalibration/docs/**'
+  #          controller:
+  #            - 'controller/docs/**'
+  #          percebro:
+  #            - 'percebro/docs/**'
 
-  build_toplevel:
-    needs: filter
-    if: ${{ needs.filter.outputs.toplevel_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@b39f8770ac653e73001e07f9f47028e1d590be5c
-    secrets:
-      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
-      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
-      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
+  # build_toplevel:
+  #   needs: filter
+  #   if: ${{ needs.filter.outputs.toplevel_changed == 'true' }}
+  #   uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@b39f8770ac653e73001e07f9f47028e1d590be5c
+  #   secrets:
+  #     SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+  #     DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+  #     DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
 
-  build_autocalibration:
-    needs: filter
-    if: ${{ needs.filter.outputs.autocalibration_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@b39f8770ac653e73001e07f9f47028e1d590be5c
-    secrets:
-      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
-      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
-      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
-    with:
-      docs_directory: autocalibration
+  # build_autocalibration:
+  #   needs: filter
+  #   if: ${{ needs.filter.outputs.autocalibration_changed == 'true' }}
+  #   uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@b39f8770ac653e73001e07f9f47028e1d590be5c
+  #   secrets:
+  #     SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+  #     DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+  #     DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
+  #   with:
+  #     docs_directory: autocalibration
 
-  build_controller:
-    needs: filter
-    if: ${{ needs.filter.outputs.controller_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@b39f8770ac653e73001e07f9f47028e1d590be5c
-    secrets:
-      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
-      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
-      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
-    with:
-      docs_directory: controller
+  # build_controller:
+  #   needs: filter
+  #   if: ${{ needs.filter.outputs.controller_changed == 'true' }}
+  #   uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@b39f8770ac653e73001e07f9f47028e1d590be5c
+  #   secrets:
+  #     SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+  #     DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+  #     DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
+  #   with:
+  #     docs_directory: controller
 
-  build_percebro:
-    needs: filter
-    if: ${{ needs.filter.outputs.percebro_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@b39f8770ac653e73001e07f9f47028e1d590be5c
-    secrets:
-      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
-      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
-      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
-    with:
-      docs_directory: percebro
+  # build_percebro:
+  #   needs: filter
+  #   if: ${{ needs.filter.outputs.percebro_changed == 'true' }}
+  #   uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@b39f8770ac653e73001e07f9f47028e1d590be5c
+  #   secrets:
+  #     SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+  #     DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+  #     DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
+  #   with:
+  #     docs_directory: percebro
