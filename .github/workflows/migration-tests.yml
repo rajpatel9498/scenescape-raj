@@ -71,16 +71,20 @@ jobs:
 
           echo "filtered_projects=$filtered_projects" >> $GITHUB_OUTPUT
           echo "other_changed_projects=$other_changed_projects" >> $GITHUB_OUTPUT
-      # - name: "Workspace Setup"
-      #   uses: ./.github/actions/workspace-setup
-      # - name: Debug environment
-      #   run: |
-      #     echo "✅ BUILD_TYPE: $BUILD_TYPE"
-      #     echo "✅ JIRA_RELEASE: $JIRA_RELEASE"
-      #     echo "✅ VERSION: $VERSION"
-      #     echo "✅ ARTIFACTORY_PATH: $ARTIFACTORY_PATH"
-      #     echo "✅ SW_PACKAGE_DIR: $SW_PACKAGE_DIR"
-      #     echo "✅ TEST_TEMPLATE: $TEST_TEMPLATE"
+      - name: Setup environment
+        shell: bash
+        env:
+          RUN_TYPE: ${{ github.event.inputs.run_type || '' }}
+        run: |
+          .github/scripts/check_and_set-build-type.sh
+      - name: Debug environment
+        run: |
+          echo "✅ BUILD_TYPE: $BUILD_TYPE"
+          echo "✅ JIRA_RELEASE: $JIRA_RELEASE"
+          echo "✅ VERSION: $VERSION"
+          echo "✅ ARTIFACTORY_PATH: $ARTIFACTORY_PATH"
+          echo "✅ SW_PACKAGE_DIR: $SW_PACKAGE_DIR"
+          echo "✅ TEST_TEMPLATE: $TEST_TEMPLATE"
   # validate important repository-level changes, without triggering builds/tests for unrelated app code
   pre-merge-root:
     permissions:
