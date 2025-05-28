@@ -1,8 +1,3 @@
-#!/bin/bash
-
-# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-
 set -euo pipefail
 
 # GitHub environment variables
@@ -36,10 +31,10 @@ case "${GITHUB_EVENT_NAME:-}" in
     esac
     ;;
   schedule)
-    DOW=$(date +%u)  # 1 = Monday, ..., 7 = Sunday
+    DAY_OF_WEEK=$(date +%u)  # 1 = Monday, ..., 7 = Sunday
     HOUR=$(date +%H) # 00 to 23 (UTC)
 
-    if [[ "$DOW" == "6" && "$HOUR" -ge 12 ]]; then
+    if [[ "$Day_Of_Week" == "6" && "$HOUR" -ge 12 ]]; then
       BUILD_TYPE="WEEKLY"
     else
       BUILD_TYPE="DAILY"
@@ -88,6 +83,12 @@ case "$BUILD_TYPE" in
     ARTIFACTORY_PATH="iseaval-ba-local/scenescape/daily"
     SW_PACKAGE_DIR="scenescape"
     TEST_TEMPLATE="T - All Tests"
+    ;;
+  *)
+    VERSION="unset-${BUILD_TYPE,,}-$(date -u +%s)"
+    ARTIFACTORY_PATH="undefined_path-$(date -u +%s)"
+    SW_PACKAGE_DIR="undefined_directory-$(date -u +%s)"
+    TEST_TEMPLATE="undefined_template-$(date -u +%s)"
     ;;
 esac
 

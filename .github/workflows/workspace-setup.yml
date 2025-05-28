@@ -27,10 +27,7 @@ on:
       - reopened
 
   schedule:
-    # DAILY
     - cron: '0 5 * * 1-6'
-
-    # WEEKLY
     - cron: '0 12 * * 6'
 
   # Trigger workflow when enqueued to a merge group
@@ -53,6 +50,8 @@ jobs:
 
       - name: Setup environment
         shell: bash
+        env:
+          RUN_TYPE: ${{ github.event.inputs.run_type || '' }}
         run: |
           .github/scripts/check_and_set-build-type.sh
       # This job uses reusable scripts for Jenkinsfile linting and artifactory ops
