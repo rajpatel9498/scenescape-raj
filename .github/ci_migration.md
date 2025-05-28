@@ -17,7 +17,7 @@ This document tracks the progress of migrating our CI/CD pipelines from **Jenkin
 
 | Jenkins Stage               | Status          | GitHub Actions Equivalent            | Assigned To    | Notes              |
 |-----------------------------|-----------------|--------------------------------------|----------------|--------------------|
-| `Workspace`                 | 🟡 In Progress  | `.github/actions/workspace-setup`    | @sbelhaik      | Testing ongoing    |
+| `Workspace`                 | ✅ Done         | `.github/actions/workspace-setup`    | @sbelhaik      |                    |
 | `Build`                     | 🟡 In Progress  | `Makefile`                           | @sbelhaik      | Testing ongoing    |
 | `Run Tests`                 | ⬜ Not Started  | TBD                                  | Unassigned     |                    |
 | `Run Performance Tests`     | ⬜ Not Started  | TBD                                  | Unassigned     |                    |
