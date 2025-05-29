@@ -35,10 +35,11 @@ case "${GITHUB_EVENT_NAME:-}" in
     esac
     ;;
   schedule)
+    TZ="America/Los_Angeles"
     DAY_OF_WEEK=$(date +%u)  # 1 = Monday, ..., 7 = Sunday
     HOUR=$(date +%H) # 00 to 23 (UTC)
 
-    if [[ "$Day_Of_Week" == "6" && "$HOUR" -ge 12 ]]; then
+    if [[ "$DAY_OF_WEEK" == "6" && "$HOUR" -ge 12 ]]; then
       BUILD_TYPE="WEEKLY"
     else
       BUILD_TYPE="DAILY"
