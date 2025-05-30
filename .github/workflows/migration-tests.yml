@@ -114,11 +114,8 @@ jobs:
           echo "$PWD/venv/bin" >> $GITHUB_PATH
           pip install --upgrade pip
           pip install -r .github/resources/requirements.txt
-  pre-merge-pipeline:
-    uses: open-edge-platform/orch-ci/.github/workflows/pre-merge.yml@b39f8770ac653e73001e07f9f47028e1d590be5c  # 0.1.13
-    with:
-      # run_version_check: true
-      run_build: true
+      - name: Run build
+        run: make build
 
   filter:
    runs-on: ubuntu-latest
