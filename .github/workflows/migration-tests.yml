@@ -87,6 +87,8 @@ jobs:
           echo "✅ ARTIFACTORY_PATH: $ARTIFACTORY_PATH"
           echo "✅ SW_PACKAGE_DIR: $SW_PACKAGE_DIR"
           echo "✅ TEST_TEMPLATE: $TEST_TEMPLATE"
+        env:
+          BUILD_TYPE: ${{ steps.set-env.outputs.build_type }}
   # validate important repository-level changes, without triggering builds/tests for unrelated app code
   pre-merge-root:
     permissions:
@@ -129,7 +131,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       BUILD_TYPE: ${{ needs.pre-checks.outputs.build_type }}
-    name: run build
     steps:
       - name: Checkout code
         uses: actions/checkout@v4.2.2
