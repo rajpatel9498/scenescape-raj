@@ -5,10 +5,11 @@ SUB_FOLDERS := docker controller/docker autocalibration/docker percebro/docker
 EXTRA_BUILD_FLAGS :=
 TARGET_BRANCH ?= $(if $(CHANGE_TARGET),$(CHANGE_TARGET),$(BRANCH_NAME))
 
-ifeq ($(or $(findstring DAILY,$(BUILD_TYPE)),$(findstring TAG,$(BUILD_TYPE))),true)
+ifneq (,$(filter DAILY TAG,$(BUILD_TYPE)))
   EXTRA_BUILD_FLAGS := rebuild
 endif
-ifeq ($(or $(TARGET_BRANCH)),rc beta-rc)
+
+ifneq (,$(filter rc beta-rc,$(TARGET_BRANCH)))
   EXTRA_BUILD_FLAGS := rebuild
 endif
 
@@ -18,8 +19,9 @@ build: check-tag build-certificates build-docker
 .PHONY: check-tag
 check-tag:
 ifeq ($(BUILD_TYPE),TAG)
-	@echo "Checking if tag matches sscape/version.txt..."
-	@if grep --quiet $(BRANCH_NAME) sscape/version.txt; then \
+	@echo "Checking if tag matches version.txt..."
+	@TAG_NAME=$$(echo $(BRANCH_NAME) | sed 's|refs/tags/||'); \
+	if grep --quiet "$$TAG_NAME" version.txt; then \
 		echo "Perfect - Tag and Version is matching"; \
 	else \
 		echo "There is some mismatch between Tag and Version"; \
