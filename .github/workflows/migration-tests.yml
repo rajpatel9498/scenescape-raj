@@ -51,6 +51,8 @@ jobs:
       filtered_projects: ${{ steps.filter-changes.outputs.filtered_projects }}
       other_changed_projects: ${{ steps.filter-changes.outputs.other_changed_projects }}
       build_type: ${{ steps.set-env.outputs.build_type }}
+      branch_name: ${{ steps.set-env.outputs.branch_name }}
+      change_target: ${{ steps.set-env.outputs.change_target }}
     steps:
       - uses: actions/checkout@v4.2.2
         with:
@@ -79,16 +81,14 @@ jobs:
           RUN_TYPE: ${{ github.event.inputs.run_type || '' }}
         run: |
           .github/scripts/check_and_set-build-type.sh
+          .github/scripts/set-make-env-vars.sh
       - name: Debug environment
         run: |
-          echo "✅ BUILD_TYPE: $BUILD_TYPE"
           echo "✅ JIRA_RELEASE: $JIRA_RELEASE"
           echo "✅ VERSION: $VERSION"
           echo "✅ ARTIFACTORY_PATH: $ARTIFACTORY_PATH"
           echo "✅ SW_PACKAGE_DIR: $SW_PACKAGE_DIR"
           echo "✅ TEST_TEMPLATE: $TEST_TEMPLATE"
-        env:
-          BUILD_TYPE: ${{ steps.set-env.outputs.build_type }}
   # validate important repository-level changes, without triggering builds/tests for unrelated app code
   pre-merge-root:
     permissions:
@@ -122,25 +122,22 @@ jobs:
     needs: pre-checks
     permissions:
       contents: read
-    # if: ${{ needs.pre-checks.outputs.filtered_projects != '[]' }}
-    # # creates a job for each item in the filtered_projects output
-    # strategy:
-    #   fail-fast: false  - ${{ matrix.project_folder }}
-    #   matrix:
-    #     project_folder: ${{ fromJson(needs.pre-checks.outputs.filtered_projects) }}
     runs-on: ubuntu-latest
     env:
       BUILD_TYPE: ${{ needs.pre-checks.outputs.build_type }}
+      BRANCH_NAME: ${{ needs.pre-checks.outputs.branch_name }}
+      CHANGE_TARGET: ${{ needs.pre-checks.outputs.change_target }}
+      EXTRA_BUILD_FLAGS: ''
     steps:
       - name: Checkout code
         uses: actions/checkout@v4.2.2
-      - name: Debug environment
+      - name: Debug env passed to make
         run: |
-          echo "✅ BUILD_TYPE: $BUILD_TYPE"
-
-      # - name: Build project
-      #   run: make build
-      #   working-directory: ${{ matrix.project_folder }}
+          echo "BUILD_TYPE: $BUILD_TYPE"
+          echo "BRANCH_NAME: $BRANCH_NAME"
+          echo "CHANGE_TARGET: $CHANGE_TARGET"
+      - name: Build project
+        run: make build
 
   filter:
    runs-on: ubuntu-latest
