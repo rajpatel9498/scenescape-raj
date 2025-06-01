@@ -81,7 +81,7 @@ jobs:
           RUN_TYPE: ${{ github.event.inputs.run_type || '' }}
         run: |
           .github/scripts/check_and_set-build-type.sh
-          .github/scripts/set-make-env-vars.sh
+          .github/scripts/set_make_env_vars.sh
       - name: Debug environment
         run: |
           echo "✅ JIRA_RELEASE: $JIRA_RELEASE"
