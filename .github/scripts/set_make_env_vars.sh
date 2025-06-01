@@ -6,8 +6,13 @@ set -euo pipefail
 
 echo "Setting environment variables for Makefile logic..."
 
-# Set branch_name from GITHUB_REF_NAME
-echo "branch_name=$GITHUB_REF_NAME" >> "$GITHUB_OUTPUT"
+if [[ -n "${GITHUB_HEAD_REF}" ]]; then
+  # Pull request: use source branch
+  echo "branch_name=${GITHUB_HEAD_REF}" >> "$GITHUB_OUTPUT"
+else
+  # Push, tag, manual, schedule: use GITHUB_REF_NAME
+  echo "branch_name=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+fi
 
 # Log event name for debug
 echo "GitHub Event: $GITHUB_EVENT_NAME"
