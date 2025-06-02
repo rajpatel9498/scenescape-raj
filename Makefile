@@ -68,6 +68,14 @@ run_performance_tests:
 	@echo "Running performance tests..."
 	$(MAKE) -C tests performance_tests -j 1 SUPASS=$(SUPASS) || (echo "Performance tests failed" && exit 1)
 
+.PHONY: run_stability_tests
+run_stability_tests:
+ifeq ($(BUILD_TYPE),DAILY)
+	@$(MAKE) -C tests system-stability SUPASS=admin123 HOURS=4
+else
+	@$(MAKE) -C tests system-stability SUPASS=admin123
+endif
+
 .PHONY: clean
 clean:
 	@echo "Cleaning up all microservices..."
