@@ -1,5 +1,7 @@
 # SPDX-FileCopyrightText: (C) 2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: LicenseRef-Intel-Edge-Software
+# This file is licensed under the Limited Edge Software Distribution License Agreement.
+# See the LICENSE file in the root of this repository for details.
 
 COMMON_FOLDER := scene_common
 SUB_FOLDERS := docker controller autocalibration manager percebro
