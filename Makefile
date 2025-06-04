@@ -3,7 +3,7 @@
 
 COMMON_FOLDER := scene_common
 SUB_FOLDERS := docker controller autocalibration manager percebro
-SUPASS := supass
+SUPASS ?=
 EXTRA_BUILD_FLAGS :=
 TARGET_BRANCH ?= $(if $(CHANGE_TARGET),$(CHANGE_TARGET),$(BRANCH_NAME))
 SHELL:=/bin/bash
