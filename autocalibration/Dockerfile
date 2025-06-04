@@ -1,7 +1,7 @@
 # =========================
 # STAGE 1: BUILD STAGE
 # =========================
-FROM scenescape-common-base AS builder
+FROM scenescape-common-base AS camcalibration-builder
 
 ENV DEBIAN_FRONTEND=noninteractive
 ARG CERTDOMAIN=scenescape.intel.com
@@ -9,8 +9,7 @@ ENV CERTDOMAIN=${CERTDOMAIN}
 
 # Upgrade pip and install buildtime requirements
 COPY autocalibration/requirements-buildtime.txt /tmp/
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential curl git cmake && \
+RUN apt-get update && apt-get install -y --no-install-recommends && \
     rm -rf /var/lib/apt/lists/* && \
     pip3 install --upgrade --no-cache-dir \
     --extra-index-url https://download.pytorch.org/whl/cpu \
@@ -18,7 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # === AprilTag Build and Wheel ===
 RUN mkdir -p /output /tmp/apriltag_build /tmp/apriltag && \
-    git clone https://github.com/duckietown/lib-dt-apriltags.git /tmp/apriltag/apriltag-dev && \
+    git clone --depth=1 https://github.com/duckietown/lib-dt-apriltags.git /tmp/apriltag/apriltag-dev && \
     cd /tmp/apriltag/apriltag-dev && git submodule update --init && \
     mkdir build && cd build && cmake ../apriltags/ && make -j$(nproc) && \
     cd .. && python3 setup.py bdist_wheel && \
@@ -69,15 +68,15 @@ RUN pip install --no-cache-dir \
     -r /tmp/requirements-runtime.txt && rm -rf /tmp/requirements-runtime.txt
 
 # Install wheels
-COPY --from=builder /output/*.whl /tmp/
+COPY --from=camcalibration-builder /output/*.whl /tmp/
 RUN pip install --no-cache-dir /tmp/*.whl && rm -rf /tmp/*.whl
 
 # Copy AprilTag shared objects
-COPY --from=builder /tmp/apriltag_build/*.so /usr/local/lib/python3.10/site-packages/dt_apriltags/
+COPY --from=camcalibration-builder /tmp/apriltag_build/*.so /usr/local/lib/python3.10/site-packages/dt_apriltags/
 
 # Copy scene_common dependencies
-COPY --from=builder /usr/local/lib/python3.10/dist-packages/fast_geometry /usr/local/lib/python3.10/dist-packages/fast_geometry
-COPY --from=builder /usr/local/lib/python3.10/dist-packages/scene_common /usr/local/lib/python3.10/dist-packages/scene_common
+COPY --from=camcalibration-builder /usr/local/lib/python3.10/dist-packages/fast_geometry /usr/local/lib/python3.10/dist-packages/fast_geometry
+COPY --from=camcalibration-builder /usr/local/lib/python3.10/dist-packages/scene_common /usr/local/lib/python3.10/dist-packages/scene_common
 ENV PYTHONPATH="/usr/local/lib/python3.10/dist-packages"
 
 # Copy auto calibration code
