@@ -123,8 +123,9 @@ jobs:
           pip install --upgrade pip
           pip install -r .github/resources/requirements.txt
   pre-merge-pipeline:
+    name: "Pre-merge Pipeline"
     needs: pre-checks
-    if: ${{ needs.pre-checks.outputs.filtered_projects != '[]' }}
+    if: ${{ needs.pre-checks.outputs.filtered_projects != '[]' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
