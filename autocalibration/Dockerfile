@@ -1,7 +1,7 @@
 # =========================
 # STAGE 1: BUILD STAGE
 # =========================
-FROM scenescape-common-base AS camcalibration-builder
+FROM scenescape-common-base AS builder
 
 ENV DEBIAN_FRONTEND=noninteractive
 ARG CERTDOMAIN=scenescape.intel.com
@@ -9,7 +9,8 @@ ENV CERTDOMAIN=${CERTDOMAIN}
 
 # Upgrade pip and install buildtime requirements
 COPY autocalibration/requirements-buildtime.txt /tmp/
-RUN apt-get update && apt-get install -y --no-install-recommends build-essential && \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential curl git cmake && \
     rm -rf /var/lib/apt/lists/* && \
     pip3 install --upgrade --no-cache-dir \
     --extra-index-url https://download.pytorch.org/whl/cpu \
@@ -42,7 +43,7 @@ RUN cd /tmp/reloc && python3 setup.py bdist_wheel && \
 # =========================
 # STAGE 2: RUNTIME STAGE
 # =========================
-FROM ubuntu:22.04 AS camcalibration-runtime
+FROM python:3.10-slim AS runtime
 
 ARG USER_ID
 ARG CERTDOMAIN=scenescape.intel.com
@@ -51,34 +52,34 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV WSUSER=scenescape
 ENV SCENESCAPE_HOME=/home/$WSUSER/SceneScape
 
-# Install runtime dependencies
-COPY autocalibration/requirements-runtime.txt /tmp/
+# Install runtime system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 python3-pip bindfs sudo libgl1 libglib2.0 libgomp1 && \
-    rm -rf /var/lib/apt/lists/* && \
-    pip3 install --upgrade --no-cache-dir \
-    --extra-index-url https://download.pytorch.org/whl/cpu \
-    -r /tmp/requirements-runtime.txt
+    bindfs sudo libgl1 libglib2.0-0 libgomp1 && \
+    rm -rf /var/lib/apt/lists/*
 
-# Create user
+# Add user
 RUN useradd -r -m -s /bin/bash $WSUSER && \
     usermod -a -G video,users $WSUSER && \
-    HOME_DIR=$(eval echo ~$WSUSER) && \
-    chmod a+rX "$HOME_DIR"
+    chmod a+rX /home/$WSUSER
 
-# Install all wheels
-COPY --from=camcalibration-builder /output/*.whl /tmp/
-RUN pip3 install --no-cache-dir /tmp/*.whl && rm -rf /tmp/*.whl
+# Install required Python packages
+COPY autocalibration/requirements-runtime.txt /tmp/
+RUN pip install --no-cache-dir \
+    --extra-index-url https://download.pytorch.org/whl/cpu \
+    -r /tmp/requirements-runtime.txt && rm -rf /tmp/requirements-runtime.txt
+
+# Install wheels
+COPY --from=builder /output/*.whl /tmp/
+RUN pip install --no-cache-dir /tmp/*.whl && rm -rf /tmp/*.whl
 
 # Copy AprilTag shared objects
-COPY --from=camcalibration-builder /tmp/apriltag_build/*.so /usr/local/lib/python3.10/dist-packages/dt_apriltags/
+COPY --from=builder /tmp/apriltag_build/*.so /usr/local/lib/python3.10/dist-packages/dt_apriltags/
 
-ENV BUILD_ENV_DIR=/tmp/venv
-# Copy scene_common
-COPY --from=camcalibration-builder /usr/local/lib/python3.10/dist-packages/fast_geometry /usr/local/lib/python3.10/dist-packages/fast_geometry
-COPY --from=camcalibration-builder /usr/local/lib/python3.10/dist-packages/scene_common /usr/local/lib/python3.10/dist-packages/scene_common
+# Copy scene_common dependencies
+COPY --from=builder /usr/local/lib/python3.10/dist-packages/fast_geometry /usr/local/lib/python3.10/dist-packages/fast_geometry
+COPY --from=builder /usr/local/lib/python3.10/dist-packages/scene_common /usr/local/lib/python3.10/dist-packages/scene_common
 
-# Copy auto calibration sources
+# Copy auto calibration code
 COPY autocalibration/src/camcalibration $SCENESCAPE_HOME/
 RUN chmod +x $SCENESCAPE_HOME/camcalibration
 COPY autocalibration/src/*.py $SCENESCAPE_HOME/
