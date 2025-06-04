@@ -73,11 +73,12 @@ COPY --from=builder /output/*.whl /tmp/
 RUN pip install --no-cache-dir /tmp/*.whl && rm -rf /tmp/*.whl
 
 # Copy AprilTag shared objects
-COPY --from=builder /tmp/apriltag_build/*.so /usr/local/lib/python3.10/dist-packages/dt_apriltags/
+COPY --from=builder /tmp/apriltag_build/*.so /usr/local/lib/python3.10/site-packages/dt_apriltags/
 
 # Copy scene_common dependencies
 COPY --from=builder /usr/local/lib/python3.10/dist-packages/fast_geometry /usr/local/lib/python3.10/dist-packages/fast_geometry
 COPY --from=builder /usr/local/lib/python3.10/dist-packages/scene_common /usr/local/lib/python3.10/dist-packages/scene_common
+ENV PYTHONPATH="/usr/local/lib/python3.10/dist-packages"
 
 # Copy auto calibration code
 COPY autocalibration/src/camcalibration $SCENESCAPE_HOME/
