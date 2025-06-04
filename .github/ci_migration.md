@@ -15,13 +15,13 @@ This document tracks the progress of migrating our CI/CD pipelines from **Jenkin
 
 ## 🗂️ Migration Status Overview
 
-| Jenkins Stage               | Status          | GitHub Actions Equivalent            | Assigned To    | Notes              |
-|-----------------------------|-----------------|--------------------------------------|----------------|--------------------|
-| `Workspace`                 | ✅ Done         | `.github/actions/workspace-setup`    | @sbelhaik      |                    |
-| `Build`                     | 🟡 In Progress  | `Makefile`                           | @sbelhaik      | Testing ongoing    |
-| `Run Tests`                 | ⬜ Not Started  | TBD                                  | Unassigned     |                    |
-| `Run Performance Tests`     | ⬜ Not Started  | TBD                                  | Unassigned     |                    |
-| `Run Stability Tests`       | ⬜ Not Started  | TBD                                  | Unassigned     |                    |
+| Jenkins Stage               | Status          | GitHub Actions Equivalent                             | Assigned To    | Notes              |
+|-----------------------------|-----------------|-------------------------------------------------------|----------------|--------------------|
+| `Workspace`                 | ✅ Done         | `pre-merge` job `Setup environment` step              | @sbelhaik      |                    |
+| `Build`                     | 🟡 In Progress  | `pre-merge-pipeline` job `Build Project` step         | @sbelhaik      | Code review        |
+| `Run Tests`                 | 🟡 In Progress  | pre-merge-pipeline` job `Run Tests`  | @dmytroye      | @dmytroye      |                    |
+| `Run Performance Tests`     | 🟡 In Progress  | `pre-merge-pipeline` job `Run Performance Tests` step | @sbelhaik      | Code review        |
+| `Run Stability Tests`       | 🟡 In Progress  | `pre-merge-pipeline` job `Run Stability Tests` step   | @sbelhaik      | Code review        |
 | `Publish Test Report`       | ⬜ Not Started  | TBD                                  | Unassigned     |                    |
 | `Coverage Report`           | ⬜ Not Started  | TBD                                  | Unassigned     |                    |
 | `Metrics`                   | ⬜ Not Started  | TBD                                  | Unassigned     |                    |
